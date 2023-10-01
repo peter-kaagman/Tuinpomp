@@ -43,10 +43,10 @@ END_QRY
 	my $row2 = $sth2->fetchrow_hashref();
 	if ($row2->{'count'}){
 		say "GPIO: ", $row->{'name'}, " moet aan";
-		$pin->write(ON);
+		$pin->write(HIGH);
 	}else{
 		say "GPIO: ", $row->{'name'}, " moet uit";
-		$pin->write(OFF);
+		$pin->write(LOW);
 	}
 	
 
