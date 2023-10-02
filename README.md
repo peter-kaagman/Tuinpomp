@@ -1,6 +1,6 @@
 # Tuinpomp
 ## Inleiding
-Tegenwoordig heb ik een hydrofoorpomp voor mijn tuin Aangezien ik een aantal druppelslangen heb (met weinig afname) leek mij dat handig: zodoende hoeft de pomp niet constant te draaien. Er zijn in princiepe 2 kringen: de druppelslangen, en de gazonsproeiers. Dat betekend op dit moment dat ik met de hand een kring aansluit en dan de pomp aanzet.
+Tegenwoordig heb ik een hydrofoorpomp voor mijn tuin Aangezien ik een aantal druppelslangen heb (met weinig afname) leek mij dat handig, zodoende hoeft de pomp niet constant te draaien. Er zijn in princiepe 2 kringen: de druppelslangen, en de gazonsproeiers. Op dit moment sluit ik met de hand een kring aan en zet dan de pomp aan.
 Dit wil ik uiteraard automatiseren. De pomp slaat vanzelf af als er voldoende druk is, maar de kringen wil ik aan kunnen zetten via een magneetklep.
 ## Functionele eisen
 ### Must have
