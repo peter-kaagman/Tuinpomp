@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="<% settings.charset %>">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title><% title %></title>
+  <link rel="stylesheet" href="<% request.uri_base %>/css/style.css">
+  <script src="<% request.uri_base %>/javascripts/myscript.js"></script>
+
+</head>
+<body>
+<% content %>
+<div id="footer">
+Powered by <a href="http://perldancer.org/">Dancer2</a> <% dancer_version %>
+</div>
+</body>
+</html>
