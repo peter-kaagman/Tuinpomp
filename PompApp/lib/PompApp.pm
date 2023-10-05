@@ -9,7 +9,20 @@ use Data::Dumper;
 our $VERSION = '0.1';
 
 get '/' => sub {
-  my $sth = database->prepare('Select * From circuit');
+  template 'index' => { 
+	  'title' => 'PompApp',
+  };
+};
+
+get '/api/getStatus' => sub {
+  my $qry =<<"ENDQRY";
+Select circuit.name,
+       circuit.gpio,
+       color.vallue as color
+From circuit
+Join color On circuit.color = color.ROWID
+ENDQRY
+  my $sth = database->prepare($qry);
   $sth->execute();
   my @result;
   my $pi = RPi::WiringPi->new();
@@ -20,18 +33,7 @@ get '/' => sub {
   }
   $pi->cleanup;
   print Dumper \@result;
-  template 'index' => { 
-	  'title' => 'PompApp',
-	  'circuits' => \@result
-  };
-};
-
-get '/api/getStatus' => sub {
-	my %data = (
-		name => 'Peter',
-		status => 'Cool'
-	);
-	send_as JSON => \%data;
+  send_as JSON => \@result;
 };
 
 true;
