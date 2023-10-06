@@ -18,9 +18,8 @@ get '/api/getStatus' => sub {
   my $qry =<<"ENDQRY";
 Select circuit.name,
        circuit.gpio,
-       color.vallue as color
+       circuit.color
 From circuit
-Join color On circuit.color = color.ROWID
 ENDQRY
   my $sth = database->prepare($qry);
   $sth->execute();
@@ -32,8 +31,45 @@ ENDQRY
 	  push(@result, $row);
   }
   $pi->cleanup;
+  $sth->finish();
   print Dumper \@result;
   send_as JSON => \@result;
+};
+
+
+get '/api/getSchedule' => sub {
+  my $qry =<<"ENDQRY";
+Select 
+       circuit.rowid as c_id,
+       circuit.name,
+       circuit.color,
+       schedule.rowid as s_id,
+       schedule.day,
+       schedule.start,
+       schedule.end
+From circuit
+Left Join schedule on circuit.rowid = schedule.circuit
+ENDQRY
+  my $sth = database->prepare($qry);
+  $sth->execute();
+  my %result;
+#circuit_id
+#    schedule_id
+#      start
+#      end
+#      color
+#      name
+#      day
+  while (my $row = $sth->fetchrow_hashref()){
+    $result{$row->{'c_id'}}{$row->{'s_id'}}{'start'} = $row->{'start'};
+    $result{$row->{'c_id'}}{$row->{'s_id'}}{'end'} = $row->{'end'};
+    $result{$row->{'c_id'}}{$row->{'s_id'}}{'color'} = $row->{'color'};
+    $result{$row->{'c_id'}}{$row->{'s_id'}}{'name'} = $row->{'name'};
+    $result{$row->{'c_id'}}{$row->{'s_id'}}{'day'} = $row->{'day'};
+  }
+  $sth->finish();
+  print Dumper \%result;
+  send_as JSON => \%result;
 };
 
 true;

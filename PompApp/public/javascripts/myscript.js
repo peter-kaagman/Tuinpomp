@@ -1,9 +1,9 @@
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function() { //{{{1
   console.log("document loaded");
   getStatus();
   getSchedule();
 
-  function getStatus(){
+  function getStatus(){//{{{2
     console.log("getStatus()");
     var statusTable = document.querySelector('#statusTable');
     if (statusTable){
@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", function() {
       row.append(headerStatus);
       table.append(row);//}}}
 
+      // Rows{{{3
       fetch("/api/getStatus")
         .then( res => {
           return res.json();
@@ -54,30 +55,87 @@ document.addEventListener("DOMContentLoaded", function() {
        })
         .catch( err => {
           console.error(err);
-        });
+        });//}}}3
 	statusTable.textContent = '';
 	statusTable.append(table);
       } // if(statusTable)
-  }
+  }//}}}2
 
-  function getSchedule(){
+  function getSchedule(){//{{{2
     console.log("getSchedule()");
     const schedule = document.querySelector('#scheduleCanvas');
     if (schedule){
       console.log("Creating canvas");
-      const canvas = document.createElement(`canvas`);
-      if (canvas.getContext("2d")){
-        const ctx = canvas.getContext("2d");
+      const width = schedule.clientWidth;
+      const height = 24;
+      const leftBorder = 75;
+      const dayWidth = Math.round((width-leftBorder) / 7);
+      const daysLong = [
+        'Maandag',
+        'Dinsdag',
+        'Woensdag',
+        'Donderdag',
+        'Vrijdag',
+        'Zaterdag',
+        'Zondag'
+      ];
+      const daysShort = [
+        'Maa',
+        'Din',
+        'Woe',
+        'Don',
+        'Vri',
+        'Zat',
+        'Zon'
+      ];
+      console.log(`Width ${width}`);
+      console.log(`Border ${leftBorder}`);
+      console.log(`Day ${dayWidth}`);
+      const canvasHeader = document.createElement(`canvas`);
+      if (canvasHeader.getContext("2d")){
+        const ctx = canvasHeader.getContext("2d");
+        ctx.canvas.width = width;
+        ctx.canvas.height = height;
+        //Header canvas {{{3
         ctx.fillStyle = "rgb(200,0,0)";
-        ctx.fillRect(10,10,50,50);
-        ctx.fillStyle = "rgba(0,0,200,0.5)";
-        ctx.fillRect(30,30,50,50);
-      }
-      schedule.textContent = '';
-      schedule.append(canvas);
+        ctx.fillRect(leftBorder,0,2,height);//verticale borderline
+        ctx.fillRect(width-2,0,2,height);//vertical borderline
+        ctx.fillRect(0,20,width,2);//horizontale borderline
+        for (let day = 0 ; day < 7; day++){
+          let x = leftBorder+(day+1)*dayWidth;
+          let middag = Math.round(dayWidth/2);
+          ctx.fillStyle = "rgb(0,200,0)";
+          ctx.fillRect(x,0,2,height); // verticale daglijn
+          ctx.fillRect(x-middag,20,2,height-20); // verticale middaglijn
+          ctx.fillStyle = "rgb(0,0,200)";
+          ctx.font = "15px sans-serif"
+          if (dayWidth > 60){
+            ctx.fillText(daysLong[day],x-dayWidth+5,15,dayWidth-10 );
+          }else{
+            ctx.fillText(daysShort[day],x-dayWidth+5,15,dayWidth-10 );
+          }
+        }// for day}}}3
+        schedule.textContent = '';
+        schedule.append(canvasHeader);
+        //Row canvas {{{3
+        //Fetch the schedules
+        fetch("/api/getSchedule")
+        .then( res => {
+          return res.json();
+        })
+        .then( data => {
+          console.log(data);
+          data.forEach(obj => {
+            console.log(obj);
+          }); // forEach schedule
+        })
+        .catch( err => {
+          console.error(err);
+        });//}}}3
+      }// if canvas
     }
 
-  }
+  }//}}}2
 
 
-});
+});//}}}1
