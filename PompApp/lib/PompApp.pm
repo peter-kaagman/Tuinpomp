@@ -7,14 +7,16 @@ use RPi::Const qw(:all);
 use Data::Dumper;
 
 our $VERSION = '0.1';
-
+# Routes {{{1
 get '/' => sub {
   template 'index' => { 
 	  'title' => 'PompApp',
   };
 };
+#}}}1
 
-get '/api/getStatus' => sub {
+#Api routes {{{1
+get '/api/getStatus' => sub { #{{{2
   my $qry =<<"ENDQRY";
 Select circuit.name,
        circuit.gpio,
@@ -34,10 +36,9 @@ ENDQRY
   $sth->finish();
   print Dumper \@result;
   send_as JSON => \@result;
-};
+};#}}}2
 
-
-get '/api/getSchedule' => sub {
+get '/api/getSchedule' => sub {#{{{2
   my $qry =<<"ENDQRY";
 Select 
        circuit.rowid as c_id,
@@ -61,15 +62,16 @@ ENDQRY
 #      name
 #      day
   while (my $row = $sth->fetchrow_hashref()){
-    $result{$row->{'c_id'}}{$row->{'s_id'}}{'start'} = $row->{'start'};
-    $result{$row->{'c_id'}}{$row->{'s_id'}}{'end'} = $row->{'end'};
-    $result{$row->{'c_id'}}{$row->{'s_id'}}{'color'} = $row->{'color'};
-    $result{$row->{'c_id'}}{$row->{'s_id'}}{'name'} = $row->{'name'};
-    $result{$row->{'c_id'}}{$row->{'s_id'}}{'day'} = $row->{'day'};
+    $result{$row->{'c_id'}}{'name'} = $row->{'name'};
+    $result{$row->{'c_id'}}{'color'} = $row->{'color'};
+    $result{$row->{'c_id'}}{'schedules'}{$row->{'s_id'}}{'start'} = $row->{'start'};
+    $result{$row->{'c_id'}}{'schedules'}{$row->{'s_id'}}{'end'} = $row->{'end'};
+    $result{$row->{'c_id'}}{'schedules'}{$row->{'s_id'}}{'day'} = $row->{'day'};
   }
   $sth->finish();
   print Dumper \%result;
   send_as JSON => \%result;
-};
-
+};#}}}}2
+#}}}1
 true;
+# vim: set foldmethod=marker

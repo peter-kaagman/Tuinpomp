@@ -18,8 +18,8 @@
 
   <div id="content">
     <div id="header">
-      <h1>Dit is de header</h1>
-      <h2>You&rsquo;ve joined the dance floor!</h2>
+      <h1>Tuinpomp</h1>
+      <h2>Een app op een Pi</h2>
     </div> <!-- header-->
 
     <div id="status">

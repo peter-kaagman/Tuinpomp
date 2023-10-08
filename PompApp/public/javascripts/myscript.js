@@ -93,7 +93,7 @@ document.addEventListener("DOMContentLoaded", function() { //{{{1
       console.log(`Day ${dayWidth}`);
       const canvasHeader = document.createElement(`canvas`);
       if (canvasHeader.getContext("2d")){
-        const ctx = canvasHeader.getContext("2d");
+        let ctx = canvasHeader.getContext("2d");
         ctx.canvas.width = width;
         ctx.canvas.height = height;
         //Header canvas {{{3
@@ -106,7 +106,7 @@ document.addEventListener("DOMContentLoaded", function() { //{{{1
           let middag = Math.round(dayWidth/2);
           ctx.fillStyle = "rgb(0,200,0)";
           ctx.fillRect(x,0,2,height); // verticale daglijn
-          ctx.fillRect(x-middag,20,2,height-20); // verticale middaglijn
+          ctx.fillRect(x-middag,20,1,height-20); // verticale middaglijn
           ctx.fillStyle = "rgb(0,0,200)";
           ctx.font = "15px sans-serif"
           if (dayWidth > 60){
@@ -114,9 +114,10 @@ document.addEventListener("DOMContentLoaded", function() { //{{{1
           }else{
             ctx.fillText(daysShort[day],x-dayWidth+5,15,dayWidth-10 );
           }
-        }// for day}}}3
+        }// for day
         schedule.textContent = '';
         schedule.append(canvasHeader);
+        //}}}3
         //Row canvas {{{3
         //Fetch the schedules
         fetch("/api/getSchedule")
@@ -124,18 +125,43 @@ document.addEventListener("DOMContentLoaded", function() { //{{{1
           return res.json();
         })
         .then( data => {
-          console.log(data);
-          data.forEach(obj => {
-            console.log(obj);
-          }); // forEach schedule
+          for (const [circuit, schedule_ids] of Object.entries(data)){
+            console.log(circuit);
+            console.log(schedule_ids.name);
+            console.log(schedule_ids.color);
+            const canvasRow = document.createElement(`canvas`);
+            if (canvasRow.getContext("2d")){
+              ctx = canvasRow.getContext("2d");
+              ctx.canvas.width = width;
+              ctx.canvas.height = height;
+              ctx.fillStyle = "rgb(200,0,0)";
+              ctx.fillRect(leftBorder,0,2,height);//verticale borderline
+              ctx.fillRect(width-2,0,2,height);//vertical borderline
+              for (let day = 0 ; day < 7; day++){
+                let x = leftBorder+(day+1)*dayWidth;
+                let middag = Math.round(dayWidth/2);
+                ctx.fillStyle = "rgb(0,200,0)";
+                ctx.fillRect(x,0,2,height); // verticale daglijn
+                ctx.fillRect(x-middag,0,1,height); // verticale middaglijn
+              }
+              ctx.fillStyle = schedule_ids.color;
+              ctx.font = "15px sans-serif"
+              ctx.fillText(schedule_ids.name,2,17,65);
+              for (const [key,vallue] of Object.entries(schedule_ids.schedules)){
+                console.log(`${vallue.day} => ${vallue.start} tot ${vallue.end}`);
+              }
+              schedule.append(canvasRow);
+            }
+          }
         })
         .catch( err => {
           console.error(err);
         });//}}}3
       }// if canvas
-    }
+    } // if schedulre
 
   }//}}}2
 
 
 });//}}}1
+// vim: set foldmethod=marker
