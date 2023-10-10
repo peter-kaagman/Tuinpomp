@@ -34,7 +34,7 @@ ENDQRY
   }
   $pi->cleanup;
   $sth->finish();
-  print Dumper \@result;
+  #print Dumper \@result;
   send_as JSON => \@result;
 };#}}}2
 
@@ -62,6 +62,7 @@ ENDQRY
 #      name
 #      day
   while (my $row = $sth->fetchrow_hashref()){
+    print Dumper $row;
     $result{$row->{'c_id'}}{'name'} = $row->{'name'};
     $result{$row->{'c_id'}}{'color'} = $row->{'color'};
     $result{$row->{'c_id'}}{'schedules'}{$row->{'s_id'}}{'start'} = $row->{'start'};
@@ -69,9 +70,8 @@ ENDQRY
     $result{$row->{'c_id'}}{'schedules'}{$row->{'s_id'}}{'day'} = $row->{'day'};
   }
   $sth->finish();
-  print Dumper \%result;
+  #print Dumper \%result;
   send_as JSON => \%result;
 };#}}}}2
 #}}}1
 true;
-# vim: set foldmethod=marker

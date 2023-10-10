@@ -1,12 +1,7 @@
-Create Table color(
-	name TEXT NOT NULL,
-	vallue TEXT NOT NULL
-);
 Create Table circuit(
 	name TEXT NOT NULL,
-	color int NOT NULL,
-	gpio int NOT NULL,
-	FOREIGN KEY(color) REFERENCES color(ROWID)
+	color TEXT NOT NULL,
+	gpio int NOT NULL
 );
 Create Table schedule(
 	circuit int NOT NULL,

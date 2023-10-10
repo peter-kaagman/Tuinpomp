@@ -63,13 +63,9 @@ document.addEventListener("DOMContentLoaded", function() { //{{{1
 
   function getSchedule(){//{{{2
     console.log("getSchedule()");
+    // Settings {{{3
     const schedule = document.querySelector('#scheduleCanvas');
     if (schedule){
-      console.log("Creating canvas");
-      const width = schedule.clientWidth;
-      const height = 24;
-      const leftBorder = 75;
-      const dayWidth = Math.round((width-leftBorder) / 7);
       const daysLong = [
         'Maandag',
         'Dinsdag',
@@ -88,80 +84,98 @@ document.addEventListener("DOMContentLoaded", function() { //{{{1
         'Zat',
         'Zon'
       ];
-      console.log(`Width ${width}`);
-      console.log(`Border ${leftBorder}`);
-      console.log(`Day ${dayWidth}`);
-      const canvasHeader = document.createElement(`canvas`);
-      if (canvasHeader.getContext("2d")){
-        let ctx = canvasHeader.getContext("2d");
-        ctx.canvas.width = width;
-        ctx.canvas.height = height;
-        //Header canvas {{{3
-        ctx.fillStyle = "rgb(200,0,0)";
-        ctx.fillRect(leftBorder,0,2,height);//verticale borderline
-        ctx.fillRect(width-2,0,2,height);//vertical borderline
-        ctx.fillRect(0,20,width,2);//horizontale borderline
-        for (let day = 0 ; day < 7; day++){
-          let x = leftBorder+(day+1)*dayWidth;
-          let middag = Math.round(dayWidth/2);
-          ctx.fillStyle = "rgb(0,200,0)";
-          ctx.fillRect(x,0,2,height); // verticale daglijn
-          ctx.fillRect(x-middag,20,1,height-20); // verticale middaglijn
-          ctx.fillStyle = "rgb(0,0,200)";
-          ctx.font = "15px sans-serif"
-          if (dayWidth > 60){
-            ctx.fillText(daysLong[day],x-dayWidth+5,15,dayWidth-10 );
-          }else{
-            ctx.fillText(daysShort[day],x-dayWidth+5,15,dayWidth-10 );
-          }
-        }// for day
-        schedule.textContent = '';
-        schedule.append(canvasHeader);
-        //}}}3
-        //Row canvas {{{3
-        //Fetch the schedules
+      // }}} 3
         fetch("/api/getSchedule")
         .then( res => {
           return res.json();
         })
         .then( data => {
-          for (const [circuit, schedule_ids] of Object.entries(data)){
-            console.log(circuit);
-            console.log(schedule_ids.name);
-            console.log(schedule_ids.color);
-            const canvasRow = document.createElement(`canvas`);
-            if (canvasRow.getContext("2d")){
-              ctx = canvasRow.getContext("2d");
-              ctx.canvas.width = width;
-              ctx.canvas.height = height;
-              ctx.fillStyle = "rgb(200,0,0)";
-              ctx.fillRect(leftBorder,0,2,height);//verticale borderline
-              ctx.fillRect(width-2,0,2,height);//vertical borderline
-              for (let day = 0 ; day < 7; day++){
-                let x = leftBorder+(day+1)*dayWidth;
-                let middag = Math.round(dayWidth/2);
-                ctx.fillStyle = "rgb(0,200,0)";
-                ctx.fillRect(x,0,2,height); // verticale daglijn
-                ctx.fillRect(x-middag,0,1,height); // verticale middaglijn
+          const aantal_circuits = Object.keys(data).length;
+          // Hier weten we hoeveel circuits er zijn en kunnen we een canvas maken
+          // Eerst maken en dan per circuit toevoegen gaat niet om dat een canvas bij
+          // een resize gecleared wordt.
+          // Header en grid {{{3
+          console.log("Creating canvas");
+          console.log(`Aantal circuit is ${aantal_circuits}`);
+          const width = schedule.clientWidth;
+          const height = 24+(aantal_circuits*24);
+          const leftBorder = 75;
+          // Start en einde zijn per dag gegeven in minuten vanaf middennacht/.
+          const pix_per_minuut = (width-leftBorder) / (7*24*60*60);
+          console.log(`Pixels per minuut: ${pix_per_minuut}`);
+          const dayWidth = Math.round((width-leftBorder) / 7);
+          console.log(`Width ${width}`);
+          console.log(`Border ${leftBorder}`);
+          console.log(`Day ${dayWidth}`);
+          const canvas = document.createElement(`canvas`);
+          if (canvas.getContext("2d")){
+            const ctx = canvas.getContext("2d");
+            ctx.canvas.height = height;
+            ctx.canvas.width = width;
+            ctx.fillStyle = "black";
+            ctx.fillRect(leftBorder,0,2,height);//verticale borderline
+            ctx.fillRect(width-2,0,2,height);//vertical borderline
+            // Horizontal lines
+            for (let x = 0; x <= aantal_circuits; x++){
+              let y = 24 + (x*24)-2;
+              ctx.fillRect(0, y-2, width, 2);
+            }
+            //ctx.fillRect(0,20,width,2);//horizontale borderline
+            for (let day = 0 ; day < 7; day++){
+              let x = leftBorder+(day+1)*dayWidth;
+              let middag = Math.round(dayWidth/2);
+              ctx.fillStyle = "black";
+              ctx.fillRect(x,0,2,height); // verticale daglijn
+              ctx.fillRect(x-middag,20,1,height-20); // verticale middaglijn
+              ctx.fillStyle = "rgb(0,0,200)";
+              ctx.font = "15px sans-serif"
+              if (dayWidth > 60){
+                ctx.fillText(daysLong[day],x-dayWidth+5,15,dayWidth-10 );
+              }else{
+                ctx.fillText(daysShort[day],x-dayWidth+5,15,dayWidth-10 );
               }
+            }// for day
+            // Header en grid }}}
+            // Rows {{{3
+            let row = 0;
+            for (const [circuit, schedule_ids] of Object.entries(data)){
+              row++;
+              console.log(circuit);
+              console.log(schedule_ids.name);
+              console.log(schedule_ids.color);
+              console.log(schedule_ids.schedules);
               ctx.fillStyle = schedule_ids.color;
               ctx.font = "15px sans-serif"
-              ctx.fillText(schedule_ids.name,2,17,65);
-              for (const [key,vallue] of Object.entries(schedule_ids.schedules)){
-                console.log(`${vallue.day} => ${vallue.start} tot ${vallue.end}`);
+              ctx.fillText(schedule_ids.name,2,row*24+15,65);
+              ctx.strokeStyle = schedule_ids.color;
+              for (const [id, vallue] of Object.entries(schedule_ids.schedules)){
+                ctx.beginPath();
+                let x1 = Math.round(leftBorder + (vallue.day * dayWidth) + (vallue.start * pix_per_minuut));
+                let x2 = Math.round(leftBorder + (vallue.day * dayWidth) + (vallue.end * pix_per_minuut));
+                let y = 24+(24*row)-12;
+                console.log(` ${x1}:${y} => ${x2}:${y}`)
+                ctx.moveTo(x1,y);
+                ctx.lineTo(x2,y);
+                ctx.stroke();
               }
-              schedule.append(canvasRow);
-            }
-          }
-        })
+            } // for [circuit, schedule_ids]
+            // Rows }}}
+          }// if canvas.getContect 
+          schedule.append(canvas);
+        }) //thendata
         .catch( err => {
           console.error(err);
-        });//}}}3
-      }// if canvas
-    } // if schedulre
+        });
+    } // if schedule
 
   }//}}}2
 
 
 });//}}}1
-// vim: set foldmethod=marker
+            /*
+              let ctx = canvas.getContext("2d");
+
+            //for (const [key,vallue] of Object.entries(schedule_ids.schedules)){
+            //  console.log(`${vallue.day} => ${vallue.start} tot ${vallue.end}`);
+            //}
+          */
