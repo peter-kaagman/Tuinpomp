@@ -66,6 +66,9 @@ document.addEventListener("DOMContentLoaded", function() { //{{{1
     // Settings {{{3
     const schedule = document.querySelector('#scheduleCanvas');
     if (schedule){
+      schedule.addEventListener("mouseover", (event) =>{
+        console.log(`${event.clientX} : ${event.clientY}`);
+      });
       const daysLong = [
         'Maandag',
         'Dinsdag',
@@ -96,17 +99,17 @@ document.addEventListener("DOMContentLoaded", function() { //{{{1
           // een resize gecleared wordt.
           // Header en grid {{{3
           console.log("Creating canvas");
-          console.log(`Aantal circuit is ${aantal_circuits}`);
+          //console.log(`Aantal circuit is ${aantal_circuits}`);
           const width = schedule.clientWidth;
           const height = 24+(aantal_circuits*24);
           const leftBorder = 75;
           // Start en einde zijn per dag gegeven in minuten vanaf middennacht/.
           const pix_per_minuut = (width-leftBorder) / (7*24*60*60);
-          console.log(`Pixels per minuut: ${pix_per_minuut}`);
+          //console.log(`Pixels per minuut: ${pix_per_minuut}`);
           const dayWidth = Math.round((width-leftBorder) / 7);
-          console.log(`Width ${width}`);
-          console.log(`Border ${leftBorder}`);
-          console.log(`Day ${dayWidth}`);
+          //console.log(`Width ${width}`);
+          //console.log(`Border ${leftBorder}`);
+          //console.log(`Day ${dayWidth}`);
           const canvas = document.createElement(`canvas`);
           if (canvas.getContext("2d")){
             const ctx = canvas.getContext("2d");
@@ -140,10 +143,10 @@ document.addEventListener("DOMContentLoaded", function() { //{{{1
             let row = 0;
             for (const [circuit, schedule_ids] of Object.entries(data)){
               row++;
-              console.log(circuit);
-              console.log(schedule_ids.name);
-              console.log(schedule_ids.color);
-              console.log(schedule_ids.schedules);
+              //console.log(circuit);
+              //console.log(schedule_ids.name);
+              //console.log(schedule_ids.color);
+              //console.log(schedule_ids.schedules);
               ctx.fillStyle = schedule_ids.color;
               ctx.font = "15px sans-serif"
               ctx.fillText(schedule_ids.name,2,row*24+15,65);
@@ -153,7 +156,7 @@ document.addEventListener("DOMContentLoaded", function() { //{{{1
                 let x1 = Math.round(leftBorder + (vallue.day * dayWidth) + (vallue.start * pix_per_minuut));
                 let x2 = Math.round(leftBorder + (vallue.day * dayWidth) + (vallue.end * pix_per_minuut));
                 let y = 24+(24*row)-12;
-                console.log(` ${x1}:${y} => ${x2}:${y}`)
+                //console.log(` ${x1}:${y} => ${x2}:${y}`)
                 ctx.moveTo(x1,y);
                 ctx.lineTo(x2,y);
                 ctx.stroke();
@@ -172,10 +175,3 @@ document.addEventListener("DOMContentLoaded", function() { //{{{1
 
 
 });//}}}1
-            /*
-              let ctx = canvas.getContext("2d");
-
-            //for (const [key,vallue] of Object.entries(schedule_ids.schedules)){
-            //  console.log(`${vallue.day} => ${vallue.start} tot ${vallue.end}`);
-            //}
-          */

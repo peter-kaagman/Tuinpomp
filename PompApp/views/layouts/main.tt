@@ -4,14 +4,23 @@
   <meta charset="<% settings.charset %>">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title><% title %></title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
   <link rel="stylesheet" href="<% request.uri_base %>/css/style.css">
   <script src="<% request.uri_base %>/javascripts/myscript.js"></script>
-
 </head>
 <body>
-<% content %>
-<div id="footer">
-Powered by <a href="http://perldancer.org/">Dancer2</a> <% dancer_version %>
-</div>
+  <div class="container" bg-dark  >
+    <% content %>
+    <div id="footer" class="row">
+      <div class="col-md-12">
+      Powered by <a href="http://perldancer.org/">Dancer2</a> <% dancer_version %>
+      </div>
+    </div>
+  </div> <!-- container -->
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
 </body>
 </html>
