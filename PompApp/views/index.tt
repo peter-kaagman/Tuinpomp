@@ -1,6 +1,6 @@
 <div id="page" class="row">
 
-  <div id="content" class="col-md-8 offset-md-2">
+  <div id="content" class="col-md-12">
     <% INCLUDE header.tt %>
     <% INCLUDE menu.tt %>
 
