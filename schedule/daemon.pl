@@ -1,30 +1,29 @@
 #! /usr/bin/env perl
 
+use feature ":5.10";
 use strict;
 use warnings;
+use Daemon::Control;
+use File::Basename qw(dirname);
+use File::Spec::Functions qw(catfile);
 
-main();
+my $dir = dirname(__FILE__);
 
-sub main {
-  my $logfile = 'process.log';
-  my $continue = 1;
+exit Daemon::Control->new(
+  name        => 'PKn Daemon',
+  lsb_start   => '$syslog $remote_fs',
+  lsb_stop    => '$syslog',
+  lsb_sdesc   => 'PKn Daemon Short',
+  lsb_desc    => 'Dit is mijn control daemon',
+  path        => $dir,
 
-  $SIG{INT} = sub{
-    logger('int received');
-    $continue = 0;
-  };
+  program     => catfile($dir, 'local.pl'),
+  program_args=> [],
 
-  while ($continue){
-    logger('');
-    sleep 1;
-  }
-}
+  pid_file    => '/tmp/pkndaemon.pid',
+  stderr_file => '/tmp/pkndaemon.out',
+  stdout_file => '/tmp/pkndaemon.out',
 
-sub logger {
-  my $text = shift;
+  fork        => 2,
+)->run;
 
-  if (open FH, '>>', 'process.log'){
-    print FH scalar localtime();
-    print FH " $text\n";
-  }
-}
