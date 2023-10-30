@@ -19,9 +19,16 @@ my $db_user = "";
 my $db_pass = "";
 my $dbh = DBI->connect($dsn,$db_user,$db_pass, { RaiseError => 1}) or die $DBI::errstr;
 my $pi = RPi::WiringPi->new();
-my $INTERRUPT=0;
+my $ButtonActive=0;
 
 my $config = setup();
+# Maak objecten voor de pins in de config
+
+foreach my $circuit (keys %{$config->{'circuits'}}){
+  $config->{'pins'}->{$config->{'circuits'}->{$circuit}->{'gpio'}} = $pi->pin($config->{'circuits'}->{$circuit}->{'gpio'});
+  $config->{'pins'}->{$config->{'circuits'}->{$circuit}->{'button'}} = $pi->pin($config->{'circuits'}->{$circuit}->{'button'});
+}
+#print Dumper $config;
 loop($config);
 
 sub loop {
@@ -31,6 +38,7 @@ sub loop {
 
   $SIG{TERM} = sub{
       logger('TERM received');
+      $pi->cleanup;
       $continue = 0;
   };
   $SIG{HUP} = sub{
@@ -41,14 +49,12 @@ sub loop {
   while ($continue){
     $count++;
 
-    if(! $INTERRUPT){
     checkButtons($config);
-    }
 
     if ($count eq 600){
-      $count = 0;
-      checkCircuits($config);
       logger("$count Circuits");
+      checkCircuits($config);
+      $count = 0;
     }
 
     usleep(100000); # 1/10 sec
@@ -56,16 +62,26 @@ sub loop {
 }
 sub checkButtons{ #{{{1
   my $config = shift;
-  foreach my $rowid (keys %{$config}){
-    my $pin = $pi->pin($config->{$rowid}->{'button'});
-    $pin->mode(INPUT);
-    my $state = $pin->read;
-    if($state){
-      $INTERRUPT = 1;
-      logger($config->{$rowid}->{'button'}. " is $state");
-      $INTER
+  if($ButtonActive){
+    #Check of hij nog steeds aktief is
+    #my $pin = $pi->pin($ButtonActive);
+    $config->{'pins'}->{$ButtonActive}->mode(INPUT);
+    my $state = $config->{'pins'}->{$ButtonActive}->read;
+    if (!$state){
+      logger("Clearing Active state pin $ButtonActive");
+      $ButtonActive = 0;
     }
-    $pi->cleanup;
+  }else{
+    # Geen pins aktief dus checken
+    foreach my $rowid (keys %{$config->{'circuits'}}){
+      #my $pin = $pi->pin($config->{'circuits'}->{$rowid}->{'button'});
+      $config->{'pins'}->{ $config->{'circuits'}->{$rowid}->{'button'} }->mode(INPUT);
+      my $state = $config->{'pins'}->{ $config->{'circuits'}->{$rowid}->{'button'} }->read;
+      if($state){
+        $ButtonActive = $config->{'circuits'}->{$rowid}->{'button'};
+        logger($config->{'circuits'}->{$rowid}->{'button'}. " is $state");
+      }
+    }
   }
 } # }}}
 
@@ -74,12 +90,10 @@ sub checkCircuits{ #{{{1
   my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 
   my $now = $hour*3600 + $min*60;
-  foreach my $rowid (keys %{$config}){
-    say $config->{$rowid}->{'gpio'};
-  #while (my $row = $sth->fetchrow_hashref()){
+  foreach my $rowid (keys %{$config->{'circuits'}}){
     # Initialize the pin
-    my $pin = $pi->pin($config->{$rowid}->{'gpio'});
-    $pin->mode(OUTPUT);
+    #my $pin = $pi->pin($config->{'circuits'}->{$rowid}->{'gpio'});
+    $config->{'pins'}->{$config->{'circuits'}->{$rowid}->{'gpio'}}->mode(OUTPUT);
     # Should it be on or off?
     my $qry =<<"END_QRY";
 Select count(circuit) as count 
@@ -92,21 +106,21 @@ END_QRY
     $sth->execute();
     my $row = $sth->fetchrow_hashref();
     if ($row->{'count'}){
-      logger("GPIO: ". $config->{$rowid}->{'name'}. " moet aan");
-      $pin->write(HIGH);
+      logger("GPIO: ". $config->{'circuits'}->{$rowid}->{'name'}. " moet aan");
+      $config->{'pins'}->{$config->{'circuits'}->{$rowid}->{'gpio'}}->write(HIGH);
     }else{
-      logger ("GPIO: ". $config->{$rowid}->{'name'}. " moet uit");
-      $pin->write(LOW);
+      logger ("GPIO: ". $config->{'circuits'}->{$rowid}->{'name'}. " moet uit");
+      $config->{'pins'}->{$config->{'circuits'}->{$rowid}->{'gpio'}}->write(LOW);
     }
     $sth->finish();
   }
-  $pi->cleanup;
 } #}}}
 
 sub logger {
   my $text = shift;
 
   if (open FH, '>>', 'process.log'){
+    FH->autoflush;
     print FH scalar localtime();
     print FH " $text\n";
   }
@@ -116,7 +130,7 @@ sub setup {
   my $qry = "Select ROWID,gpio,button,name From circuit";
   my $sth = $dbh->prepare($qry) or die $dbh->errstr;
   $sth->execute();
-  my $config = $sth->fetchall_hashref("rowid");
-  print Dumper $config;
+  my $circuits = $sth->fetchall_hashref("rowid");
+  my $config->{'circuits'} = $circuits;
   return $config;
 }
